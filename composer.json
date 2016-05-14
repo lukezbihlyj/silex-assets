@@ -1,0 +1,16 @@
+{
+    "name": "lukezbihlyj/silex-assets",
+    "description": "Asset management system to be used with the silex-plus package.",
+    "type": "library",
+    "require": {
+        "php": ">=5.4",
+
+        "silex/silex": "~1.3",
+        "lukezbihlyj/silex-plus": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "LukeZbihlyj\\SilexAssets\\": "module/SilexAssets/src/"
+        }
+    }
+}
