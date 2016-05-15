@@ -72,7 +72,7 @@ class AssetsDumpCommand extends ConsoleCommand
                             continue;
                         }
 
-                        $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . realpath($path));
+                        $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . $this->getAbsolutePath($path));
 
                         if (false === @mkdir($path, 0777, true)) {
                             throw new \RuntimeException('Unable to create directory ' . $path);
@@ -82,7 +82,7 @@ class AssetsDumpCommand extends ConsoleCommand
                             continue;
                         }
 
-                        $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[file+]</info> ' . realpath($path));
+                        $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[file+]</info> ' . $this->getAbsolutePath($path));
 
                         if (false === @file_put_contents($path, file_get_contents($file))) {
                             throw new \RuntimeException('Unable to write file ' . $path);
@@ -117,19 +117,44 @@ class AssetsDumpCommand extends ConsoleCommand
                 );
 
                 if (!is_dir($dir = dirname($path))) {
-                    $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . realpath($dir));
+                    $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . $this->getAbsolutePath($dir));
 
                     if (false === @mkdir($dir, 0777, true)) {
                         throw new \RuntimeException('Unable to create directory ' . $dir);
                     }
                 }
 
-                $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[file+]</info> ' . realpath($path));
+                $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[file+]</info> ' . $this->getAbsolutePath($path));
 
                 if (false === @file_put_contents($path, $asset->dump())) {
                     throw new \RuntimeException('Unable to write file ' . $path);
                 }
             }
         }
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    protected function getAbsolutePath($path)
+    {
+        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        $parts = array_filter(explode(DIRECTORY_SEPARATOR, $path), 'strlen');
+        $absolutes = [];
+
+        foreach ($parts as $part) {
+            if ($part == '.') {
+                continue;
+            }
+
+            if ($part == '..') {
+                array_pop($absolutes);
+            } else {
+                $absolutes[] = $part;
+            }
+        }
+
+        return implode(DIRECTORY_SEPARATOR, $absolutes);
     }
 }
