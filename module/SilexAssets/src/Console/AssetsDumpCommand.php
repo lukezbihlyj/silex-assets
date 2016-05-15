@@ -2,11 +2,19 @@
 
 namespace LukeZbihlyj\SilexAssets\Console;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
 use LukeZbihlyj\SilexPlus\Console\ConsoleCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Assetic\AssetWriter;
+use Assetic\Factory\LazyAssetManager;
+use Assetic\Extension\Twig\TwigFormulaLoader;
+use Assetic\Extension\Twig\TwigResource;
+use Assetic\Util\VarUtils;
 
 /**
  * @package LukeZbihlyj\SilexAssets\Console\AssetsDumpCommand
@@ -19,7 +27,10 @@ class AssetsDumpCommand extends ConsoleCommand
     protected function configure()
     {
         $this->setName('assets:dump')
-            ->setDescription('Dump all found assets into the public asset directory.');
+            ->setDescription('Dump all found assets into the public asset directory.')
+            ->setDefinition([
+                new InputOption('ignore-folders', null, InputOption::VALUE_NONE)
+            ]);
     }
 
     /**
@@ -29,9 +40,96 @@ class AssetsDumpCommand extends ConsoleCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $app = $this->getSilexApp();
+        $twig = $app->getTwig();
+        $factory = $app->getAssets();
 
-        //$output->writeln('<comment>Found entity ' . $entity . ', running migration...</comment>');
+        $assetManager = new LazyAssetManager($factory);
+        $assetManager->setLoader('twig', new TwigFormulaLoader($twig));
 
-        $output->writeln('<info>Finished dumping!</info>');
+        if ($input->getOption('ignore-folders')) {
+            $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>Skipping folders...</info>');
+        } else {
+            foreach ($app['assets.folders'] as $folder) {
+                $source = $folder['source'];
+                $target = $folder['target'];
+
+                if (!is_dir($target)) {
+                    $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . realpath($target));
+
+                    if (false === @mkdir($target, 0777, true)) {
+                        throw new \RuntimeException('Unable to create directory ' . $target);
+                    }
+                }
+
+                $directoryIterator = new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS);
+                $iterator = new RecursiveIteratorIterator($directoryIterator, RecursiveIteratorIterator::SELF_FIRST);
+
+                foreach ($iterator as $file) {
+                    $path = $target . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
+
+                    if ($file->isDir()) {
+                        if (is_dir($path)) {
+                            continue;
+                        }
+
+                        $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . realpath($path));
+
+                        if (false === @mkdir($path, 0777, true)) {
+                            throw new \RuntimeException('Unable to create directory ' . $path);
+                        }
+                    } else {
+                        if (is_file($path) && md5_file($path) == md5_file($file)) {
+                            continue;
+                        }
+
+                        $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[file+]</info> ' . realpath($path));
+
+                        if (false === @file_put_contents($path, file_get_contents($file))) {
+                            throw new \RuntimeException('Unable to write file ' . $path);
+                        }
+                    }
+                }
+            }
+        }
+
+        $directoryIterator = new RecursiveDirectoryIterator($app['twig.path']);
+        $iterator = new RecursiveIteratorIterator($directoryIterator);
+        $templates = new RegexIterator($iterator, '/^.+\.twig$/i', RegexIterator::GET_MATCH);
+
+        foreach ($templates as $file) {
+            $file = str_replace(rtrim($app['twig.path'], '/') . '/', null, $file[0]);
+            $resource = new TwigResource($twig->getLoader(), $file);
+            $assetManager->addResource($resource, 'twig');
+        }
+
+        $writer = new AssetWriter($app['assets.output_path']);
+
+        foreach ($assetManager->getNames() as $name) {
+            $asset = $assetManager->get($name);
+
+            foreach (VarUtils::getCombinations($asset->getVars(), []) as $combination) {
+                $asset->setValues($combination);
+
+                $path = $app['assets.output_path'] . '/' . VarUtils::resolve(
+                    $asset->getTargetPath(),
+                    $asset->getVars(),
+                    $asset->getValues()
+                );
+
+                if (!is_dir($dir = dirname($path))) {
+                    $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . realpath($dir));
+
+                    if (false === @mkdir($dir, 0777, true)) {
+                        throw new \RuntimeException('Unable to create directory ' . $dir);
+                    }
+                }
+
+                $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[file+]</info> ' . realpath($path));
+
+                if (false === @file_put_contents($path, $asset->dump())) {
+                    throw new \RuntimeException('Unable to write file ' . $path);
+                }
+            }
+        }
     }
 }

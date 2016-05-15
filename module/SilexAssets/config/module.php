@@ -19,11 +19,22 @@ return [
     'assets.output_path' => __DIR__ . '/../../../public/asset',
 
     /**
+     * Define the path where the assets are available on the webserver, relative to the
+     * root directory. If you want you can include a CDN here.
+     */
+    'assets.output_uri' => '/asset/',
+
+    /**
+     * Define some folders to copy to the public directory. You'll probably want to use
+     * this for images and fonts.
+     */
+    'assets.folders' => [],
+
+    /**
      * Define a list of commands that should be added to the console on initialisation.
      */
     'console.commands' => [
         'LukeZbihlyj\SilexAssets\Console\AssetsDumpCommand',
-        'LukeZbihlyj\SilexAssets\Console\AssetsPurgeCommand'
     ],
 
     /**
