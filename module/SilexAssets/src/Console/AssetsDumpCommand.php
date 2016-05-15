@@ -54,7 +54,7 @@ class AssetsDumpCommand extends ConsoleCommand
                 $target = $folder['target'];
 
                 if (!is_dir($target)) {
-                    $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . realpath($target));
+                    $output->writeln('<comment>' . date('H:i:s') . '</comment> <info>[dir+]</info> ' . $this->getAbsolutePath($target));
 
                     if (false === @mkdir($target, 0777, true)) {
                         throw new \RuntimeException('Unable to create directory ' . $target);
@@ -153,6 +153,10 @@ class AssetsDumpCommand extends ConsoleCommand
             } else {
                 $absolutes[] = $part;
             }
+        }
+
+        if ($path[0] == DIRECTORY_SEPARATOR) {
+            array_unshift($absolutes, null);
         }
 
         return implode(DIRECTORY_SEPARATOR, $absolutes);
