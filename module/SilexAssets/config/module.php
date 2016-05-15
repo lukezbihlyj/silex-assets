@@ -13,6 +13,12 @@ return [
     'assets.path' => __DIR__ . '/../asset',
 
     /**
+     * Define the path where the assets should be output - this should be a subdirectory
+     * under your public root directory.
+     */
+    'assets.output_path' => __DIR__ . '/../../../public/asset',
+
+    /**
      * Define a list of commands that should be added to the console on initialisation.
      */
     'console.commands' => [
