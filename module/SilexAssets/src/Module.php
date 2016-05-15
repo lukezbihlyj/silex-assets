@@ -4,6 +4,13 @@ namespace LukeZbihlyj\SilexAssets;
 
 use LukeZbihlyj\SilexPlus\Application;
 use LukeZbihlyj\SilexPlus\ModuleInterface;
+use Assetic\AssetManager;
+use Assetic\FilterManager;
+use Assetic\Filter\LessphpFilter;
+use Assetic\Filter\CssMinFilter;
+use Assetic\Filter\JSqueezeFilter;
+use Assetic\Factory\AssetFactory;
+use Assetic\Factory\Worker\CacheBustingWorker;
 
 /**
  * @package LukeZbihlyj\SilexAssets\Module
@@ -23,6 +30,21 @@ class Module implements ModuleInterface
      */
     public function init(Application $app)
     {
-        return;
+        $app['assets'] = $app->share(function() use ($app) {
+            $assetManager = new AssetManager();
+
+            $filterManager = new FilterManager();
+            $filterManager->set('less', new LessphpFilter());
+            $filterManager->set('cssmin', new CssMinFilter());
+            $filterManager->set('jsmin', new JSqueezeFilter());
+
+            $factory = new AssetFactory($app['assets.path']);
+            $factory->setAssetManager($assetManager);
+            $factory->setFilterManager($filterManager);
+            $factory->setDefaultOutput('misc/*');
+            $factory->addWorker(new CacheBustingWorker());
+
+            return $factory;
+        });
     }
 }

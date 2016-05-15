@@ -7,9 +7,10 @@
  */
 return [
     /**
-     * Define something...
+     * Define the path to the root directory for all assets stored. This is only used
+     * when relative paths are provided to the asset manager.
      */
-    'assets.test' => '',
+    'assets.path' => __DIR__ . '/../asset',
 
     /**
      * Define a list of commands that should be added to the console on initialisation.
