@@ -18,4 +18,11 @@ return [
         'LukeZbihlyj\SilexAssets\Console\AssetsDumpCommand',
         'LukeZbihlyj\SilexAssets\Console\AssetsPurgeCommand'
     ],
+
+    /**
+     * Configure some Twig extensions that should be available to every template.
+     */
+    'twig.extensions' => [
+        'LukeZbihlyj\SilexAssets\Twig\TwigExtension',
+    ],
 ];
