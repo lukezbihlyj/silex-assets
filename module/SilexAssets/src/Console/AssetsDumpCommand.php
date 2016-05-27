@@ -102,6 +102,11 @@ class AssetsDumpCommand extends ConsoleCommand
             $assetManager->addResource($resource, 'twig');
         }
 
+        foreach ($app['twig.templates'] as $name => $file) {
+            $resource = new TwigResource($twig->getLoader(), $name);
+            $assetManager->addResource($resource, 'twig');
+        }
+
         $writer = new AssetWriter($app['assets.output_path']);
 
         foreach ($assetManager->getNames() as $name) {

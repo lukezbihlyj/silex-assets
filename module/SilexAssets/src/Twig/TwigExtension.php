@@ -4,6 +4,7 @@ namespace LukeZbihlyj\SilexAssets\Twig;
 
 use Twig_SimpleFunction;
 use Assetic\Extension\Twig\AsseticExtension;
+use Assetic\Extension\Twig\AsseticTokenParser;
 use Silex\Application;
 
 /**
@@ -25,6 +26,18 @@ class TwigExtension extends AsseticExtension
         $this->app = $app;
 
         return parent::__construct($app->getAssets());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getTokenParsers()
+    {
+        return [
+            new AsseticTokenParser($this->factory, 'javascripts', 'js/*.js', false, ['module']),
+            new AsseticTokenParser($this->factory, 'stylesheets', 'css/*.css', false, ['module']),
+            new AsseticTokenParser($this->factory, 'image', 'images/*', true, ['module']),
+        ];
     }
 
     /**
