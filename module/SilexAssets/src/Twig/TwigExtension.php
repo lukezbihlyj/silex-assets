@@ -47,7 +47,12 @@ class TwigExtension extends AsseticExtension
     {
         return array_merge(parent::getFunctions(), [
             new Twig_SimpleFunction('cdn', function($outputPath) {
-                return rtrim($this->app['assets.output_uri'], '/') . '/' . $outputPath;
+                $basePath = rtrim($this->app['assets.output_path']);
+                $assetPath = $basePath . '/' . $outputPath;
+                $assetModified = file_exists($assetPath) ? filemtime($assetPath) : null;
+                $cacheBuster = substr(sha1($assetModified), 0, 7);
+
+                return rtrim($this->app['assets.output_uri'], '/') . '/' . $outputPath . '?' . $cacheBuster;
             }),
         ]);
     }

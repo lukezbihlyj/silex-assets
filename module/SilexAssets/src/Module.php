@@ -10,7 +10,6 @@ use Assetic\Filter\LessphpFilter;
 use Assetic\Filter\CssMinFilter;
 use Assetic\Filter\JSqueezeFilter;
 use Assetic\Factory\AssetFactory;
-use Assetic\Factory\Worker\CacheBustingWorker;
 
 /**
  * @package LukeZbihlyj\SilexAssets\Module
@@ -42,7 +41,6 @@ class Module implements ModuleInterface
             $factory->setAssetManager($assetManager);
             $factory->setFilterManager($filterManager);
             $factory->setDefaultOutput('misc/*');
-            $factory->addWorker(new CacheBustingWorker());
 
             return $factory;
         });
